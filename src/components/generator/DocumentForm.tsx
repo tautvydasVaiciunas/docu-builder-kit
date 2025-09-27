@@ -44,7 +44,11 @@ export function DocumentForm({ data, onChange }: DocumentFormProps) {
     const updatedItems = data.lineItems.map(item => {
       if (item.id === id) {
         const updated = { ...item, ...updates };
-        updated.total = updated.quantity * updated.unitPrice;
+        const quantity = Number.isFinite(updated.quantity) ? updated.quantity : 0;
+        const unitPrice = Number.isFinite(updated.unitPrice) ? updated.unitPrice : 0;
+        updated.quantity = quantity;
+        updated.unitPrice = unitPrice;
+        updated.total = Number((quantity * unitPrice).toFixed(2));
         return updated;
       }
       return item;
@@ -289,8 +293,14 @@ export function DocumentForm({ data, onChange }: DocumentFormProps) {
                         <Input
                           type="number"
                           value={item.quantity}
-                          onChange={(e) => updateLineItem(item.id, { quantity: parseInt(e.target.value) || 0 })}
+                          onChange={(e) => {
+                            const nextQuantity = parseFloat(e.target.value);
+                            updateLineItem(item.id, {
+                              quantity: Number.isFinite(nextQuantity) ? nextQuantity : 0,
+                            });
+                          }}
                           min="0"
+                          step="0.01"
                         />
                       </div>
                       <div className="col-span-2">

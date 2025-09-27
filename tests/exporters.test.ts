@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { escapePdf, generatePurchaseOrderPDF } from "../src/lib/exporters.js";
+import { calculateTotals, escapePdf, generatePurchaseOrderPDF } from "../src/lib/exporters.js";
 import type { DocumentData } from "../src/types/purchase-order.js";
 
 test("escapePdf escapes parentheses and special characters", () => {
@@ -51,4 +51,39 @@ test("generatePurchaseOrderPDF produces an openable PDF with escaped content", a
     pdfContent.includes("PO Number: PO-\\(123\\)"),
     "Escaped parentheses should be present in PDF stream",
   );
+});
+
+test("calculateTotals preserves fractional quantities in grand total", () => {
+  const data: DocumentData = {
+    poNumber: "PO-100", // minimal stub to satisfy type
+    buyer: {
+      name: "Buyer",
+      address: "123 Street",
+      email: "buyer@example.com",
+      phone: "555-0000",
+      vatNumber: "VAT-123",
+    },
+    vendor: {
+      name: "Vendor",
+      address: "456 Avenue",
+      email: "vendor@example.com",
+      phone: "555-0001",
+      vatNumber: "VAT-456",
+    },
+    lineItems: [
+      {
+        id: "fractional",
+        description: "Half-day consulting",
+        quantity: 1.5,
+        unitPrice: 199.99,
+        total: Number((1.5 * 199.99).toFixed(2)),
+      },
+    ],
+    currency: "USD",
+    taxRate: 0,
+    notes: "",
+  };
+
+  const { grandTotal } = calculateTotals(data);
+  assert.equal(grandTotal, 299.99);
 });

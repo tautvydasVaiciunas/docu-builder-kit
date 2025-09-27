@@ -32,7 +32,7 @@ function xmlEscape(text: string) {
     .replace(/'/g, "&apos;");
 }
 
-function calculateTotals(data: DocumentData) {
+export function calculateTotals(data: DocumentData) {
   const subtotal = data.lineItems.reduce((sum, item) => {
     const total = item.total ?? item.quantity * item.unitPrice;
     return sum + total;

@@ -1,0 +1,382 @@
+
+openapi: 3.0.3
+info:
+  title: Purchase Order Suite API
+  version: 1.0.0
+  description: REST API contracts for the PO Suite (Next.js routes /api/*). Auth via Supabase JWT (Bearer).
+servers:
+  - url: https://your-domain.com
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+
+  /api/orgs:
+    post:
+      summary: Create organization
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrg'
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Org' }
+
+  /api/orgs/invite:
+    post:
+      summary: Invite user to organization
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Invite' }
+      responses:
+        "204": { description: Invitation sent }
+
+  /api/vendors:
+    get:
+      summary: List vendors
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Vendor' }
+    post:
+      summary: Create vendor
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateVendor' }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Vendor' }
+
+  /api/documents:
+    post:
+      summary: Create document (PO|PROFORMA|PACKING|CREDIT)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateDocument' }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Document' }
+
+  /api/documents/{id}:
+    get:
+      summary: Get document
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Document' }
+    patch:
+      summary: Update document
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateDocument' }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Document' }
+
+  /api/documents/{id}/export:
+    post:
+      summary: Export a document to PDF or DOCX
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+        - in: query
+          name: format
+          required: true
+          schema:
+            type: string
+            enum: [pdf, docx]
+      responses:
+        "200":
+          description: File stream
+
+  /api/documents/{id}/email:
+    post:
+      summary: Email a document to vendor
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EmailSend' }
+      responses:
+        "202": { description: Queued }
+
+  /api/sequence/next:
+    post:
+      summary: Get & increment next number in sequence (Pro feature)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NextSequenceRequest' }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NextSequenceResponse' }
+
+  /api/templates:
+    get:
+      summary: List templates by type
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: type
+          required: true
+          schema:
+            type: string
+            enum: [PO, PROFORMA, PACKING, CREDIT]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Template' }
+    post:
+      summary: Create template
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateTemplate' }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Template' }
+
+  /api/billing/create-checkout-session:
+    post:
+      summary: Create Stripe Checkout session
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CheckoutRequest' }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CheckoutResponse' }
+
+  /api/billing/webhook:
+    post:
+      summary: Stripe webhook
+      responses:
+        "200": { description: OK }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Org:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        plan: { type: string }
+        seats: { type: integer }
+    CreateOrg:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+    Invite:
+      type: object
+      required: [orgId, email]
+      properties:
+        orgId: { type: string, format: uuid }
+        email: { type: string, format: email }
+        role: { type: string, enum: [owner, admin, member], default: member }
+
+    Vendor:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        tax_id: { type: string }
+        address: { type: object }
+    CreateVendor:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        tax_id: { type: string }
+        address: { type: object }
+
+    Document:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        org_id: { type: string, format: uuid }
+        type: { type: string, enum: [PO, PROFORMA, PACKING, CREDIT] }
+        number: { type: string, nullable: true }
+        currency: { type: string }
+        buyer: { type: object }
+        vendor: { type: object }
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItem'
+        totals:
+          $ref: '#/components/schemas/Totals'
+        notes: { type: string }
+        status: { type: string }
+    CreateDocument:
+      allOf:
+        - $ref: '#/components/schemas/Document'
+      required: [type, currency, line_items]
+    UpdateDocument:
+      type: object
+      properties:
+        buyer: { type: object }
+        vendor: { type: object }
+        line_items:
+          type: array
+          items: { $ref: '#/components/schemas/LineItem' }
+        totals: { $ref: '#/components/schemas/Totals' }
+        notes: { type: string }
+        number: { type: string }
+
+    LineItem:
+      type: object
+      required: [description, qty, unit_price]
+      properties:
+        description: { type: string }
+        qty: { type: number }
+        unit_price: { type: number }
+        tax_rate: { type: number, nullable: true }
+        total: { type: number, nullable: true }
+
+    Totals:
+      type: object
+      properties:
+        subtotal: { type: number }
+        tax_total: { type: number }
+        shipping: { type: number }
+        discount: { type: number }
+        grand_total: { type: number }
+
+    EmailSend:
+      type: object
+      required: [to, subject]
+      properties:
+        to: { type: string, format: email }
+        subject: { type: string }
+        message: { type: string }
+        attachmentType:
+          type: string
+          enum: [pdf, docx]
+          default: pdf
+
+    NextSequenceRequest:
+      type: object
+      required: [type]
+      properties:
+        type: { type: string, enum: [PO, PROFORMA, PACKING, CREDIT] }
+        prefix: { type: string, nullable: true }
+    NextSequenceResponse:
+      type: object
+      properties:
+        number: { type: string }
+        nextPreview: { type: string }
+
+    Template:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string }
+        name: { type: string }
+        payload: { type: object }
+    CreateTemplate:
+      type: object
+      required: [type, name, payload]
+      properties:
+        type: { type: string }
+        name: { type: string }
+        payload: { type: object }
+
+    CheckoutRequest:
+      type: object
+      properties:
+        plan:
+          type: string
+          enum: [pro, team]
+    CheckoutResponse:
+      type: object
+      properties:
+        url: { type: string }

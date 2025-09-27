@@ -1,4 +1,4 @@
-import type { DocumentData } from "@/components/generator/DocumentForm";
+import type { DocumentData } from "../types/purchase-order";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface EmailAttachment {

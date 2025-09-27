@@ -1,4 +1,4 @@
-import { DocumentData } from "@/components/generator/DocumentForm";
+import type { DocumentData } from "../types/purchase-order";
 
 export const documentTemplates: Record<string, DocumentData> = {
   construction: {

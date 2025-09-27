@@ -7,36 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Shuffle } from "lucide-react";
+import type { DocumentData, LineItem } from "../../types/purchase-order";
 
-export interface LineItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-}
-
-export interface DocumentData {
-  buyer: {
-    name: string;
-    address: string;
-    email: string;
-    phone: string;
-    vatNumber: string;
-  };
-  vendor: {
-    name: string;
-    address: string;
-    email: string;
-    phone: string;
-    vatNumber: string;
-  };
-  lineItems: LineItem[];
-  currency: string;
-  taxRate: number;
-  notes: string;
-  poNumber: string;
-}
+export type { DocumentData, LineItem } from "../../types/purchase-order";
 
 interface DocumentFormProps {
   data: DocumentData;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DocumentForm, DocumentData } from "@/components/generator/DocumentForm";
 import { DocumentPreview } from "@/components/generator/DocumentPreview";
 import { Button } from "@/components/ui/button";
@@ -6,11 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { 
-  FileText, 
-  Download, 
-  Mail, 
-  CheckCircle, 
+import { useSearchParams } from "react-router-dom";
+import {
+  FileText,
+  Download,
+  Mail,
+  CheckCircle,
   Clock, 
   Shield, 
   Zap,
@@ -19,6 +20,8 @@ import {
   ArrowRight
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useToast } from "@/components/ui/use-toast";
+import { industryTemplateNames, industryTemplatePresets } from "@/lib/templates";
 
 const initialData: DocumentData = {
   buyer: {
@@ -44,6 +47,46 @@ const initialData: DocumentData = {
 
 export default function PurchaseOrderGenerator() {
   const [documentData, setDocumentData] = useState<DocumentData>(initialData);
+  const [searchParams] = useSearchParams();
+  const lastAppliedTemplateRef = useRef<string | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const templateId = searchParams.get("template");
+
+    if (!templateId || lastAppliedTemplateRef.current === templateId) {
+      return;
+    }
+
+    const template = industryTemplatePresets[templateId];
+
+    if (!template) {
+      return;
+    }
+
+    const normalizedLineItems = template.lineItems.map((item) => ({
+      ...item,
+      total: Number(item.quantity * item.unitPrice),
+    }));
+
+    const updatedData: DocumentData = {
+      ...template,
+      buyer: { ...template.buyer },
+      vendor: { ...template.vendor },
+      poNumber: "",
+      lineItems: normalizedLineItems,
+    };
+
+    setDocumentData(updatedData);
+    lastAppliedTemplateRef.current = templateId;
+
+    const templateName = industryTemplateNames[templateId] ?? "Industry";
+
+    toast({
+      title: "Template loaded",
+      description: `${templateName} purchase order preset applied.`,
+    });
+  }, [searchParams, toast]);
 
   const handleExportPDF = () => {
     // TODO: Implement PDF export

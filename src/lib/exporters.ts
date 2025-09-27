@@ -1,4 +1,4 @@
-import type { DocumentData } from "@/components/generator/DocumentForm";
+import type { DocumentData } from "../types/purchase-order";
 
 const WATERMARK_TEXT = "Generated with Docu Builder Kit · Free Plan";
 const PDF_TITLE = "Purchase Order";
@@ -11,8 +11,16 @@ function formatCurrency(value: number, currency: string) {
   }).format(value);
 }
 
-function escapePdf(text: string) {
-  return text.replace(/\\/g, "\\\\").replace(/\\(/g, "\\(").replace(/\\)/g, "\\)");
+export function escapePdf(text: string) {
+  return text
+    .replace(/\\/g, "\\\\")
+    .replace(/\(/g, "\\(")
+    .replace(/\)/g, "\\)")
+    .replace(/\r/g, "\\r")
+    .replace(/\n/g, "\\n")
+    .replace(/\t/g, "\\t")
+    .replace(/\f/g, "\\f")
+    .replace(/\u0008/g, "\\b");
 }
 
 function xmlEscape(text: string) {

@@ -36,6 +36,28 @@ npm i
 npm run dev
 ```
 
+### Configure environment variables
+
+1. Copy the example file and create your own local environment configuration:
+
+   ```sh
+   cp .env.example .env
+   ```
+
+2. Populate `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env` with the values from the Supabase dashboard (Project Settings → API).
+3. Never commit `.env` or real credentials to version control—runtime configuration is now fully driven by environment variables and the keys have already been rotated in Supabase.
+
+### Supabase credential rotation procedure
+
+When the anon key needs to be rotated again:
+
+1. In the Supabase dashboard, navigate to **Project Settings → API** and rotate the anon/public key.
+2. Update the new values in every environment:
+   - Local development: edit the `.env` file.
+   - Hosted environments (Lovable, deployment targets, CI/CD): update the platform's environment variable settings.
+3. Restart any running dev servers or redeploy environments so that the new variables are picked up.
+4. Verify connectivity by running the application and checking that Supabase requests succeed.
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).

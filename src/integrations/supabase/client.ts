@@ -2,13 +2,21 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://pobddeahabrovgsxnbvk.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvYmRkZWFoYWJyb3Znc3huYnZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg5NzQzNTMsImV4cCI6MjA3NDU1MDM1M30.NxdTXRqaI16T5JjoMBOOaGUp829qgBAnNKtXuW4MB7c";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+
+if (!SUPABASE_URL) {
+  throw new Error('Supabase URL is not defined. Please set VITE_SUPABASE_URL in your environment variables.');
+}
+
+if (!SUPABASE_ANON_KEY) {
+  throw new Error('Supabase anon key is not defined. Please set VITE_SUPABASE_ANON_KEY in your environment variables.');
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,

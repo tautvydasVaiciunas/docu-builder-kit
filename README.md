@@ -38,14 +38,16 @@ npm run dev
 
 ### Configure environment variables
 
-1. Copy the example file and create your own local environment configuration:
+1. Review `.env.example` to see the variables the app expects. The committed `.env` only contains placeholders so that no secrets are shipped in the repo.
+2. For local development, copy the example file to a git-ignored environment file and provide your real values:
 
    ```sh
-   cp .env.example .env
+   cp .env.example .env.local
    ```
 
-2. Populate `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env` with the values from the Supabase dashboard (Project Settings → API).
-3. Never commit `.env` or real credentials to version control—runtime configuration is now fully driven by environment variables and the keys have already been rotated in Supabase.
+   Populate `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env.local` using the Supabase dashboard (Project Settings → API).
+3. For production or hosted environments (Lovable, deployment targets, CI/CD), configure the same variables through the platform's environment variable settings. The application throws a descriptive error during startup if either variable is missing.
+4. Never commit secrets to version control. The previously exposed key has been rotated in Supabase; future rotations can follow the procedure below.
 
 ### Supabase credential rotation procedure
 
@@ -53,7 +55,7 @@ When the anon key needs to be rotated again:
 
 1. In the Supabase dashboard, navigate to **Project Settings → API** and rotate the anon/public key.
 2. Update the new values in every environment:
-   - Local development: edit the `.env` file.
+   - Local development: edit your `.env.local` (or whichever local env file you created).
    - Hosted environments (Lovable, deployment targets, CI/CD): update the platform's environment variable settings.
 3. Restart any running dev servers or redeploy environments so that the new variables are picked up.
 4. Verify connectivity by running the application and checking that Supabase requests succeed.

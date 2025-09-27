@@ -145,7 +145,7 @@ export default function PurchaseOrderGenerator() {
       const attachmentBase64 = await blobToBase64(pdfBlob);
       const { grandTotal } = computeTotals(documentData);
 
-      await sendPurchaseOrderEmail({
+      const emailResponse = await sendPurchaseOrderEmail({
         vendorEmail: documentData.vendor.email,
         buyerEmail: documentData.buyer.email || undefined,
         subject: documentData.poNumber
@@ -169,7 +169,9 @@ export default function PurchaseOrderGenerator() {
 
       toast({
         title: "Email sent",
-        description: `Purchase order emailed to ${documentData.vendor.email}.`,
+        description:
+          emailResponse.message ||
+          `Purchase order emailed to ${documentData.vendor.email}.`,
       });
     } catch (error) {
       toast({

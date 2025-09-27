@@ -64,5 +64,8 @@ export async function sendPurchaseOrderEmail(
   }
 
   const data = (await response.json()) as PurchaseOrderEmailResponse;
+  if (!data?.success) {
+    throw new Error(data?.message || "Unable to send email.");
+  }
   return data;
 }

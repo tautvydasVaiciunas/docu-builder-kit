@@ -1,4 +1,5 @@
 import type { DocumentData } from "@/components/generator/DocumentForm";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface EmailAttachment {
   filename: string;
@@ -42,30 +43,32 @@ export async function blobToBase64(blob: Blob) {
 export async function sendPurchaseOrderEmail(
   payload: PurchaseOrderEmailPayload,
 ): Promise<PurchaseOrderEmailResponse> {
-  const response = await fetch("/api/email-purchase-order", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  const { data, error } = await supabase.functions.invoke<PurchaseOrderEmailResponse>(
+    "email-purchase-order",
+    {
+      body: payload,
     },
-    body: JSON.stringify(payload),
-  });
+  );
 
-  if (!response.ok) {
-    let errorMessage = "Unable to send email.";
-    try {
-      const errorBody = await response.json();
-      if (errorBody?.error) {
-        errorMessage = errorBody.error;
+  if (error) {
+    const context = (error as { context?: unknown })?.context;
+    let backendMessage: string | undefined;
+    if (typeof context === "string" && context.trim().length > 0) {
+      backendMessage = context;
+    } else if (typeof context === "object" && context !== null) {
+      if ("message" in context && typeof (context as { message?: unknown }).message === "string") {
+        backendMessage = (context as { message?: string }).message;
+      } else if ("error" in context && typeof (context as { error?: unknown }).error === "string") {
+        backendMessage = (context as { error?: string }).error;
       }
-    } catch {
-      // ignore parsing errors
     }
-    throw new Error(errorMessage);
+
+    throw new Error(backendMessage || error.message || "Unable to send email.");
   }
 
-  const data = (await response.json()) as PurchaseOrderEmailResponse;
   if (!data?.success) {
     throw new Error(data?.message || "Unable to send email.");
   }
+
   return data;
 }

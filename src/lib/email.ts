@@ -1,5 +1,5 @@
 import type { DocumentData } from "../types/purchase-order";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabaseClient, isSupabaseConfigured } from "@/integrations/supabase/client";
 
 export interface EmailAttachment {
   filename: string;
@@ -28,6 +28,11 @@ export interface PurchaseOrderEmailResponse {
   message?: string;
 }
 
+export const isPurchaseOrderEmailEnabled = isSupabaseConfigured;
+
+const MISSING_SUPABASE_ERROR_MESSAGE =
+  "Email support requires Supabase credentials. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable vendor emails.";
+
 export async function blobToBase64(blob: Blob) {
   const buffer = await blob.arrayBuffer();
   const bytes = new Uint8Array(buffer);
@@ -43,6 +48,11 @@ export async function blobToBase64(blob: Blob) {
 export async function sendPurchaseOrderEmail(
   payload: PurchaseOrderEmailPayload,
 ): Promise<PurchaseOrderEmailResponse> {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    throw new Error(MISSING_SUPABASE_ERROR_MESSAGE);
+  }
+
   const { data, error } = await supabase.functions.invoke<PurchaseOrderEmailResponse>(
     "email-purchase-order",
     {

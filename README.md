@@ -46,8 +46,12 @@ npm run dev
    ```
 
    Populate `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env.local` using the Supabase dashboard (Project Settings → API).
-3. For production or hosted environments (Lovable, deployment targets, CI/CD), configure the same variables through the platform's environment variable settings. The application throws a descriptive error during startup if either variable is missing.
+3. For production or hosted environments (Lovable, deployment targets, CI/CD), configure the same variables through the platform's environment variable settings. Without them, the app still runs but email delivery features are disabled.
 4. Never commit secrets to version control. The previously exposed key has been rotated in Supabase; future rotations can follow the procedure below.
+
+> ℹ️ **Email support requires Supabase credentials**
+>
+> PDF/DOCX exports continue to work even if `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are missing. However, sending purchase orders by email is skipped and the UI will prompt you to add these variables before vendor emails can be sent.
 
 ### Supabase credential rotation procedure
 

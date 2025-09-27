@@ -8,7 +8,11 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { toast } from "@/components/ui/use-toast";
 import { generatePurchaseOrderDOCX, generatePurchaseOrderPDF } from "@/lib/exporters";
-import { blobToBase64, sendPurchaseOrderEmail } from "@/lib/email";
+import {
+  blobToBase64,
+  sendPurchaseOrderEmail,
+  isPurchaseOrderEmailEnabled,
+} from "@/lib/email";
 import { documentTemplates } from "@/lib/templates";
 import {
   FileText,
@@ -56,6 +60,7 @@ export default function PurchaseOrderGenerator() {
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isExportingDOCX, setIsExportingDOCX] = useState(false);
   const [isEmailingVendor, setIsEmailingVendor] = useState(false);
+  const emailSupportAvailable = isPurchaseOrderEmailEnabled;
 
   useEffect(() => {
     if (!templateId) {
@@ -182,6 +187,16 @@ export default function PurchaseOrderGenerator() {
   };
 
   const handleEmailVendor = async () => {
+    if (!emailSupportAvailable) {
+      toast({
+        title: "Email setup required",
+        description:
+          "Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable vendor emails.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!documentData.vendor.email) {
       toast({
         title: "Vendor email required",

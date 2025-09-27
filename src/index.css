@@ -2,41 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Purchase Order Suite Design System - Professional Business Theme */
 
 @layer base {
   :root {
+    /* Core brand colors - Professional blue palette */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 215 25% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 215 25% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Professional blue */
+    --primary: 213 94% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 213 94% 45%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Light blue gray */
+    --secondary: 215 20% 96%;
+    --secondary-foreground: 215 25% 15%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted - Subtle grays */
+    --muted: 215 15% 96%;
+    --muted-foreground: 215 15% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Bright blue */
+    --accent: 212 100% 55%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Status colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* UI elements */
+    --border: 215 20% 90%;
+    --input: 215 20% 96%;
+    --ring: 213 94% 50%;
 
-    --radius: 0.5rem;
+    /* Professional shadows */
+    --shadow-soft: 0 1px 3px 0 hsl(215 20% 0% / 0.1), 0 1px 2px 0 hsl(215 20% 0% / 0.06);
+    --shadow-medium: 0 4px 6px -1px hsl(215 20% 0% / 0.1), 0 2px 4px -1px hsl(215 20% 0% / 0.06);
+    --shadow-large: 0 10px 15px -3px hsl(215 20% 0% / 0.1), 0 4px 6px -2px hsl(215 20% 0% / 0.05);
+    
+    /* Document preview specific */
+    --document-bg: 0 0% 100%;
+    --document-border: 215 20% 85%;
+    --document-text: 215 25% 15%;
+    --document-muted: 215 15% 55%;
+
+    --radius: 1rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -100,6 +121,29 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+/* Professional utility classes */
+@layer utilities {
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .shadow-medium {
+    box-shadow: var(--shadow-medium);
+  }
+  
+  .shadow-large {
+    box-shadow: var(--shadow-large);
+  }
+
+  .document-paper {
+    @apply bg-white border border-gray-200 shadow-medium;
+  }
+
+  .container-app {
+    @apply mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8;
   }
 }

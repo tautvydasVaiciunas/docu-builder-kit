@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { toast } from "@/components/ui/use-toast";
+import { generatePurchaseOrderDOCX, generatePurchaseOrderPDF } from "@/lib/exporters";
+import { blobToBase64, sendPurchaseOrderEmail } from "@/lib/email";
 import { 
   FileText, 
   Download, 
@@ -45,19 +48,138 @@ const initialData: DocumentData = {
 export default function PurchaseOrderGenerator() {
   const [documentData, setDocumentData] = useState<DocumentData>(initialData);
 
-  const handleExportPDF = () => {
-    // TODO: Implement PDF export
-    console.log("Exporting PDF...", documentData);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [isExportingDOCX, setIsExportingDOCX] = useState(false);
+  const [isEmailingVendor, setIsEmailingVendor] = useState(false);
+
+  const getFileName = (extension: string) => {
+    const base = documentData.poNumber?.trim() || "purchase-order";
+    const safe = base.replace(/[^a-zA-Z0-9-_.]+/g, "-");
+    return `${safe}.${extension}`;
   };
 
-  const handleExportDOCX = () => {
-    // TODO: Implement DOCX export
-    console.log("Exporting DOCX...", documentData);
+  const computeTotals = (data: DocumentData) => {
+    const subtotal = data.lineItems.reduce((sum, item) => {
+      const total = item.total ?? item.quantity * item.unitPrice;
+      return sum + total;
+    }, 0);
+    const taxAmount = subtotal * (data.taxRate / 100);
+    return {
+      subtotal,
+      taxAmount,
+      grandTotal: subtotal + taxAmount,
+    };
   };
 
-  const handleEmailVendor = () => {
-    // TODO: Implement email functionality
-    console.log("Emailing vendor...", documentData);
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const getErrorMessage = (error: unknown) => {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+    return "Something went wrong. Please try again.";
+  };
+
+  const handleExportPDF = async () => {
+    setIsExportingPDF(true);
+    try {
+      const blob = await generatePurchaseOrderPDF(documentData);
+      downloadBlob(blob, getFileName("pdf"));
+      toast({
+        title: "PDF exported",
+        description: "Your purchase order PDF has been downloaded.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
+
+  const handleExportDOCX = async () => {
+    setIsExportingDOCX(true);
+    try {
+      const blob = await generatePurchaseOrderDOCX(documentData);
+      downloadBlob(blob, getFileName("docx"));
+      toast({
+        title: "DOCX exported",
+        description: "Your purchase order DOCX has been downloaded.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
+    } finally {
+      setIsExportingDOCX(false);
+    }
+  };
+
+  const handleEmailVendor = async () => {
+    if (!documentData.vendor.email) {
+      toast({
+        title: "Vendor email required",
+        description: "Add the vendor's email address before sending the purchase order.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsEmailingVendor(true);
+    try {
+      const pdfBlob = await generatePurchaseOrderPDF(documentData);
+      const attachmentBase64 = await blobToBase64(pdfBlob);
+      const { grandTotal } = computeTotals(documentData);
+
+      await sendPurchaseOrderEmail({
+        vendorEmail: documentData.vendor.email,
+        buyerEmail: documentData.buyer.email || undefined,
+        subject: documentData.poNumber
+          ? `Purchase Order ${documentData.poNumber}`
+          : "Purchase Order",
+        message: `Hello ${documentData.vendor.name || "there"},\n\nPlease find the attached purchase order for your records.\n\nThank you.`,
+        attachment: {
+          filename: getFileName("pdf"),
+          contentType: "application/pdf",
+          base64: attachmentBase64,
+        },
+        metadata: {
+          poNumber: documentData.poNumber,
+          buyerName: documentData.buyer.name,
+          vendorName: documentData.vendor.name,
+          currency: documentData.currency,
+          total: grandTotal,
+        },
+        document: documentData,
+      });
+
+      toast({
+        title: "Email sent",
+        description: `Purchase order emailed to ${documentData.vendor.email}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Email failed",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
+    } finally {
+      setIsEmailingVendor(false);
+    }
   };
 
   return (
@@ -95,25 +217,28 @@ export default function PurchaseOrderGenerator() {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <Button 
+                      <Button
                         onClick={handleExportPDF}
+                        disabled={isExportingPDF}
                         className="flex items-center gap-2"
                         variant="default"
                       >
                         <FileText className="h-4 w-4" />
                         Export PDF
                       </Button>
-                      <Button 
+                      <Button
                         onClick={handleExportDOCX}
                         variant="outline"
+                        disabled={isExportingDOCX}
                         className="flex items-center gap-2"
                       >
                         <FileText className="h-4 w-4" />
                         Export DOCX
                       </Button>
-                      <Button 
+                      <Button
                         onClick={handleEmailVendor}
                         variant="outline"
+                        disabled={isEmailingVendor}
                         className="flex items-center gap-2"
                       >
                         <Mail className="h-4 w-4" />

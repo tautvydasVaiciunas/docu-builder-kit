@@ -1,1 +1,5 @@
 project_id = "pobddeahabrovgsxnbvk"
+
+[functions.email-purchase-order]
+verify_jwt = false
+env = ["RESEND_API_KEY", "RESEND_FROM_EMAIL"]

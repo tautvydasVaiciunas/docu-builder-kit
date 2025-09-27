@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DocumentForm, DocumentData } from "@/components/generator/DocumentForm";
 import { DocumentPreview } from "@/components/generator/DocumentPreview";
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,12 @@ import { Footer } from "@/components/layout/Footer";
 import { toast } from "@/components/ui/use-toast";
 import { generatePurchaseOrderDOCX, generatePurchaseOrderPDF } from "@/lib/exporters";
 import { blobToBase64, sendPurchaseOrderEmail } from "@/lib/email";
-import { 
-  FileText, 
-  Download, 
-  Mail, 
-  CheckCircle, 
+import { documentTemplates } from "@/lib/templates";
+import {
+  FileText,
+  Download,
+  Mail,
+  CheckCircle,
   Clock, 
   Shield, 
   Zap,
@@ -22,6 +23,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useSearchParams } from "react-router-dom";
 
 const initialData: DocumentData = {
   buyer: {
@@ -47,10 +49,60 @@ const initialData: DocumentData = {
 
 export default function PurchaseOrderGenerator() {
   const [documentData, setDocumentData] = useState<DocumentData>(initialData);
+  const [lastAppliedTemplate, setLastAppliedTemplate] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const templateId = searchParams.get("template");
 
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isExportingDOCX, setIsExportingDOCX] = useState(false);
   const [isEmailingVendor, setIsEmailingVendor] = useState(false);
+
+  useEffect(() => {
+    if (!templateId) {
+      if (lastAppliedTemplate !== null) {
+        setLastAppliedTemplate(null);
+      }
+      return;
+    }
+
+    if (templateId === lastAppliedTemplate) {
+      return;
+    }
+
+    const preset = documentTemplates[templateId];
+    if (!preset) {
+      return;
+    }
+
+    const timestamp = Date.now();
+    const normalizedLineItems = preset.lineItems.map((item, index) => {
+      const quantity = item.quantity ?? 0;
+      const unitPrice = item.unitPrice ?? 0;
+      const total = Number((quantity * unitPrice).toFixed(2));
+      return {
+        ...item,
+        id: `${timestamp}-${index}`,
+        total,
+      };
+    });
+
+    setDocumentData({
+      ...preset,
+      lineItems: normalizedLineItems,
+      poNumber: "",
+    });
+    setLastAppliedTemplate(templateId);
+
+    const formattedName = templateId
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+
+    toast({
+      title: "Template applied",
+      description: `${formattedName} preset loaded successfully.`,
+    });
+  }, [lastAppliedTemplate, templateId]);
 
   const getFileName = (extension: string) => {
     const base = documentData.poNumber?.trim() || "purchase-order";

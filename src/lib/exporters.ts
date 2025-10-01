@@ -180,7 +180,15 @@ export async function generatePurchaseOrderPDF(data: DocumentData) {
     xref += `${offsets[i].toString().padStart(10, "0")} 00000 n \\n`;
   }
 
-  const trailer = `trailer\\n<< /Size ${objects.length + 1} /Root ${catalogObj} 0 R >>\\nstartxref\\n${xrefOffset}\\n%%EOF`;
+  const trailerLines = [
+    "trailer",
+    `<< /Size ${objects.length + 1} /Root ${catalogObj} 0 R >>`,
+    "startxref",
+    `${xrefOffset}`,
+    "%%EOF",
+    "",
+  ];
+  const trailer = trailerLines.join("\n");
   parts.push(xref);
   parts.push(trailer);
 

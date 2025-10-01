@@ -51,6 +51,10 @@ test("generatePurchaseOrderPDF produces an openable PDF with escaped content", a
     pdfContent.includes("PO Number: PO-\\(123\\)"),
     "Escaped parentheses should be present in PDF stream",
   );
+  assert.ok(
+    pdfContent.endsWith("\n%%EOF\n"),
+    "PDF should terminate with a newline after the EOF marker",
+  );
 });
 
 test("calculateTotals preserves fractional quantities in grand total", () => {
